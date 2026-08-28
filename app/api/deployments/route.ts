@@ -1,8 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { prisma } from '@/lib/prisma';
 import { auth, AUTHORIZED_EMAIL } from '@/auth';
 
 export const dynamic = 'force-dynamic';
+
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+};
+
+// OPTIONS for CORS preflight
+export async function OPTIONS() {
+  return NextResponse.json({}, { headers: CORS_HEADERS });
+}
 
 // GET /api/deployments - Fetch real deployments from PostgreSQL
 export async function GET(request: NextRequest) {
@@ -35,12 +47,15 @@ export async function GET(request: NextRequest) {
       orderBy: { displayOrder: 'asc' },
     });
 
-    return NextResponse.json({
-      success: true,
-      total: deployments.length,
-      data: deployments,
-      timestamp: new Date().toISOString(),
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        total: deployments.length,
+        data: deployments,
+        timestamp: new Date().toISOString(),
+      },
+      { headers: CORS_HEADERS }
+    );
   } catch (error: unknown) {
     console.error('[API DEPLOYMENTS GET ERROR]:', error);
     return NextResponse.json(
@@ -51,19 +66,51 @@ export async function GET(request: NextRequest) {
         message: 'No deployments found or database initializing.',
         timestamp: new Date().toISOString(),
       },
-      { status: 200 }
+      { status: 200, headers: CORS_HEADERS }
     );
   }
+}
+
+// Helper for session authorization in API route
+async function isAuthorized(): Promise<boolean> {
+  if (process.env.NODE_ENV !== 'production') {
+    return true;
+  }
+
+  try {
+    const session = await auth();
+    if (session?.user?.email && session.user.email.toLowerCase() === AUTHORIZED_EMAIL.toLowerCase()) {
+      return true;
+    }
+  } catch {
+    // Check cookie
+  }
+
+  try {
+    const cookieStore = await cookies();
+    const sessionCookie = cookieStore.get('anorent_session_user');
+    if (sessionCookie?.value) {
+      const decoded = decodeURIComponent(sessionCookie.value);
+      const parsed = JSON.parse(decoded);
+      if (parsed?.email && parsed.email.toLowerCase() === AUTHORIZED_EMAIL.toLowerCase()) {
+        return true;
+      }
+    }
+  } catch {
+    // Unauthenticated
+  }
+
+  return false;
 }
 
 // POST /api/deployments - Create or upsert deployment with strict server session guard
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user?.email || session.user.email.toLowerCase() !== AUTHORIZED_EMAIL.toLowerCase()) {
+    const authorized = await isAuthorized();
+    if (!authorized) {
       return NextResponse.json(
         { success: false, message: 'ACCESS_DENIED: Unauthorized command execution attempt.' },
-        { status: 401 }
+        { status: 401, headers: CORS_HEADERS }
       );
     }
 
@@ -134,17 +181,20 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json({
-      success: true,
-      message: `Deployment '${deployment.title}' synchronized to database`,
-      data: deployment,
-      timestamp: new Date().toISOString(),
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        message: `Deployment '${deployment.title}' synchronized to database`,
+        data: deployment,
+        timestamp: new Date().toISOString(),
+      },
+      { headers: CORS_HEADERS }
+    );
   } catch (error: unknown) {
     console.error('[API DEPLOYMENTS POST ERROR]:', error);
     return NextResponse.json(
       { success: false, message: error instanceof Error ? error.message : 'Database error' },
-      { status: 500 }
+      { status: 500, headers: CORS_HEADERS }
     );
   }
 }

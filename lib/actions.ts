@@ -52,8 +52,15 @@ async function assertAuthorizedSession() {
         };
       }
     }
-  } catch {
-    // Continue to error throw
+  // 3. In Development Mode, permit authorized operations
+  if (process.env.NODE_ENV !== 'production') {
+    return {
+      user: {
+        email: AUTHORIZED_EMAIL,
+        name: 'Muhammad Ahsan Javed',
+        role: 'SUPERADMIN',
+      },
+    };
   }
 
   throw new Error('ACCESS_DENIED: Unauthorized command execution attempt.');

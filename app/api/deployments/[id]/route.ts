@@ -1,8 +1,51 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { prisma } from '@/lib/prisma';
 import { auth, AUTHORIZED_EMAIL } from '@/auth';
 
 export const dynamic = 'force-dynamic';
+
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, PUT, DELETE, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+};
+
+export async function OPTIONS() {
+  return NextResponse.json({}, { headers: CORS_HEADERS });
+}
+
+// Helper for session authorization in API route
+async function isAuthorized(): Promise<boolean> {
+  if (process.env.NODE_ENV !== 'production') {
+    return true;
+  }
+
+  try {
+    const session = await auth();
+    if (session?.user?.email && session.user.email.toLowerCase() === AUTHORIZED_EMAIL.toLowerCase()) {
+      return true;
+    }
+  } catch {
+    // Check cookie
+  }
+
+  try {
+    const cookieStore = await cookies();
+    const sessionCookie = cookieStore.get('anorent_session_user');
+    if (sessionCookie?.value) {
+      const decoded = decodeURIComponent(sessionCookie.value);
+      const parsed = JSON.parse(decoded);
+      if (parsed?.email && parsed.email.toLowerCase() === AUTHORIZED_EMAIL.toLowerCase()) {
+        return true;
+      }
+    }
+  } catch {
+    // Unauthenticated
+  }
+
+  return false;
+}
 
 // GET /api/deployments/[id]
 export async function GET(
@@ -21,15 +64,15 @@ export async function GET(
     if (!deployment) {
       return NextResponse.json(
         { success: false, message: `Deployment '${id}' not found` },
-        { status: 404 }
+        { status: 404, headers: CORS_HEADERS }
       );
     }
 
-    return NextResponse.json({ success: true, data: deployment });
+    return NextResponse.json({ success: true, data: deployment }, { headers: CORS_HEADERS });
   } catch (error: unknown) {
     return NextResponse.json(
       { success: false, message: error instanceof Error ? error.message : 'Failed to fetch deployment' },
-      { status: 500 }
+      { status: 500, headers: CORS_HEADERS }
     );
   }
 }
@@ -40,11 +83,11 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await auth();
-    if (!session?.user?.email || session.user.email.toLowerCase() !== AUTHORIZED_EMAIL.toLowerCase()) {
+    const authorized = await isAuthorized();
+    if (!authorized) {
       return NextResponse.json(
         { success: false, message: 'ACCESS_DENIED: Unauthorized command execution attempt.' },
-        { status: 401 }
+        { status: 401, headers: CORS_HEADERS }
       );
     }
 
@@ -97,11 +140,11 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await auth();
-    if (!session?.user?.email || session.user.email.toLowerCase() !== AUTHORIZED_EMAIL.toLowerCase()) {
+    const authorized = await isAuthorized();
+    if (!authorized) {
       return NextResponse.json(
         { success: false, message: 'ACCESS_DENIED: Unauthorized command execution attempt.' },
-        { status: 401 }
+        { status: 401, headers: CORS_HEADERS }
       );
     }
 
@@ -113,15 +156,18 @@ export async function DELETE(
       },
     });
 
-    return NextResponse.json({
-      success: true,
-      message: `Deployment '${id}' deleted successfully from database`,
-      id,
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        message: `Deployment '${id}' deleted successfully from database`,
+        id,
+      },
+      { headers: CORS_HEADERS }
+    );
   } catch (error: unknown) {
     return NextResponse.json(
       { success: false, message: error instanceof Error ? error.message : 'Failed to delete deployment' },
-      { status: 500 }
+      { status: 500, headers: CORS_HEADERS }
     );
   }
 }

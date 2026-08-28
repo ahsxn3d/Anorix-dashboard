@@ -5,9 +5,9 @@ import { AUTHORIZED_EMAIL } from '@/lib/constants';
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // 1. Bypass static assets and auth API
+  // 1. Bypass static assets and all API endpoints
   if (
-    pathname.startsWith('/api/auth') ||
+    pathname.startsWith('/api/') ||
     pathname.startsWith('/_next') ||
     pathname.startsWith('/favicon.ico') ||
     pathname.match(/\.(png|jpg|jpeg|svg|webp|gif|ico|css|js)$/)

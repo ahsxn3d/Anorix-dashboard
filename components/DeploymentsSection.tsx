@@ -140,7 +140,7 @@ export const DeploymentsSection: React.FC = () => {
     setTimeout(() => setToastMessage(null), 3500);
   };
 
-  // Sync with /api/deployments on mount
+  // Sync with PostgreSQL /api/deployments on mount
   useEffect(() => {
     let mounted = true;
     const syncDeployments = async () => {
@@ -148,10 +148,15 @@ export const DeploymentsSection: React.FC = () => {
       try {
         const fetched = await fetchDeploymentsAction();
         if (mounted) {
-          setDeployments(fetched || []);
+          const list = fetched || [];
+          setDeployments(list);
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('anorent_cms_deployments', JSON.stringify(list));
+            localStorage.setItem('lumaora_cms_deployments', JSON.stringify(list));
+          }
         }
       } catch (err) {
-        console.warn('API fetch fallback to localStorage:', err);
+        console.warn('API fetch fallback:', err);
       } finally {
         if (mounted) setIsLoadingApi(false);
       }
