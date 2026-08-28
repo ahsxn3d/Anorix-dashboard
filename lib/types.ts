@@ -59,7 +59,10 @@ export interface ContactSubmission {
   tags?: string[];
   assignedArchitect?: string;
   internalNotes?: string;
+  notes?: string;
   submittedAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
   date: string;
   avatar?: string;
 }

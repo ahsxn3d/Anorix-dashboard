@@ -33,26 +33,29 @@ export const KineticHeroTitle: React.FC<KineticHeroTitleProps> = ({
   const startScramble = useCallback(() => {
     setIsScrambling(true);
     let iteration = 0;
-    const maxLen = Math.max(line1.length, line2.length, line3.length);
+    const sLine1 = line1 || '';
+    const sLine2 = line2 || '';
+    const sLine3 = line3 || '';
+    const maxLen = Math.max(sLine1.length, sLine2.length, sLine3.length);
     const stepIncrement = Math.max(1, maxLen / 12);
 
     const interval = setInterval(() => {
       const solved = Math.floor(iteration * stepIncrement);
 
       setActiveLine1(
-        line1
+        sLine1
           .split('')
           .map((c, i) => (c === ' ' ? ' ' : i < solved ? c : HACKER_GLYPHS[Math.floor(Math.random() * HACKER_GLYPHS.length)]))
           .join('')
       );
       setActiveLine2(
-        line2
+        sLine2
           .split('')
           .map((c, i) => (c === ' ' ? ' ' : i < solved ? c : HACKER_GLYPHS[Math.floor(Math.random() * HACKER_GLYPHS.length)]))
           .join('')
       );
       setActiveLine3(
-        line3
+        sLine3
           .split('')
           .map((c, i) => (c === ' ' ? ' ' : i < solved ? c : HACKER_GLYPHS[Math.floor(Math.random() * HACKER_GLYPHS.length)]))
           .join('')
@@ -124,10 +127,12 @@ export const KineticHeroTitle: React.FC<KineticHeroTitleProps> = ({
   }, [restartKey, startScramble]);
 
   const renderLine = (text: string, originalText: string, lineIndex: number) => {
-    return text.split('').map((char, i) => {
+    const sText = text || '';
+    const sOrig = originalText || '';
+    return sText.split('').map((char, i) => {
       const isSpecial = char === 'i' || char === 'T' || char === '.' || char === '1' || char === '4';
       const isSpace = char === ' ';
-      const isSolved = char === originalText[i];
+      const isSolved = char === sOrig[i];
 
       if (isSpace) {
         return <span key={`${lineIndex}-${i}`} className="inline-block w-2 sm:w-4">&nbsp;</span>;

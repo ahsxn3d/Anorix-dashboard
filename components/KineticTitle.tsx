@@ -15,7 +15,7 @@ interface KineticTitleProps {
 const HACKER_GLYPHS = 'ABCDEF0123456789!@#$%^&*()_+-=[]{}|;:,.<>?/~_0101XYZΔΨΩ';
 
 export const KineticTitle: React.FC<KineticTitleProps> = ({
-  text,
+  text = '',
   className = '',
   size = 'lg',
   scrambleOnMount = true,
@@ -23,7 +23,8 @@ export const KineticTitle: React.FC<KineticTitleProps> = ({
   triggerOnce = false, // Allow re-scrambling on section entry
   restartKey,
 }) => {
-  const [displayedChars, setDisplayedChars] = useState<string[]>(() => text.split(''));
+  const safeText = text || '';
+  const [displayedChars, setDisplayedChars] = useState<string[]>(() => safeText.split(''));
   const [isScrambling, setIsScrambling] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const iterationRef = useRef(0);
@@ -42,21 +43,21 @@ export const KineticTitle: React.FC<KineticTitleProps> = ({
       setDisplayedChars(() => {
         const solvedThreshold = Math.floor(iterationRef.current / 2.0);
 
-        const next = text.split('').map((char, index) => {
+        const next = safeText.split('').map((char, index) => {
           if (char === ' ') return ' ';
           if (index < solvedThreshold) {
-            return text[index];
+            return safeText[index];
           }
           return HACKER_GLYPHS[Math.floor(Math.random() * HACKER_GLYPHS.length)];
         });
 
-        if (solvedThreshold >= text.length) {
+        if (solvedThreshold >= safeText.length) {
           if (intervalRef.current) {
             clearInterval(intervalRef.current);
             intervalRef.current = null;
           }
           setIsScrambling(false);
-          return text.split('');
+          return safeText.split('');
         }
 
         iterationRef.current += 1;

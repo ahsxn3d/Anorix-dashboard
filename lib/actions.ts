@@ -79,7 +79,37 @@ export async function fetchDeploymentsAction(): Promise<DeploymentProduct[]> {
     const deployments = await prisma.deploymentProduct.findMany({
       orderBy: { displayOrder: 'asc' },
     });
-    return deployments as unknown as DeploymentProduct[];
+    return (deployments || []).map((d) => ({
+      id: d.id,
+      slug: d.slug || '',
+      title: d.title || 'Untitled Deployment',
+      client: d.client || '',
+      year: d.year || '',
+      category: d.category || 'SAAS DASHBOARDS',
+      badge: d.badge || '',
+      shortDescription: d.shortDescription || '',
+      fullDescription: d.fullDescription || '',
+      thumbnailUrl: d.thumbnailUrl || '',
+      coverImageUrl: d.coverImageUrl || '',
+      previewVideoUrl: d.previewVideoUrl || '',
+      demoUrl: d.demoUrl || d.liveUrl || '',
+      githubUrl: d.githubUrl || '',
+      liveUrl: d.liveUrl || d.demoUrl || '',
+      rating: d.rating ?? 5.0,
+      usersCount: d.usersCount || '0',
+      viewsCount: d.viewsCount || '0',
+      tags: Array.isArray(d.tags) ? d.tags : [],
+      techStack: Array.isArray(d.techStack) ? d.techStack : [],
+      features: Array.isArray(d.features) ? d.features : [],
+      fpsBenchmark: d.fpsBenchmark ?? 60,
+      auditScore: d.auditScore ?? 100,
+      status: (d.status as 'Production' | 'Staging' | 'Archived') || 'Production',
+      isFeatured: Boolean(d.isFeatured),
+      isPublished: d.isPublished !== false,
+      displayOrder: d.displayOrder ?? 0,
+      createdAt: d.createdAt ? d.createdAt.toISOString() : new Date().toISOString(),
+      updatedAt: d.updatedAt ? d.updatedAt.toISOString() : new Date().toISOString(),
+    })) as unknown as DeploymentProduct[];
   } catch (error) {
     console.error('[DB FETCH DEPLOYMENTS ERROR]:', error);
     return [];
@@ -215,7 +245,26 @@ export async function fetchInquiriesAction(): Promise<ContactSubmission[]> {
     const submissions = await prisma.contactSubmission.findMany({
       orderBy: { createdAt: 'desc' },
     });
-    return submissions as unknown as ContactSubmission[];
+    return (submissions || []).map((s) => ({
+      id: s.id,
+      clientName: s.name || 'Anonymous Client',
+      name: s.name || 'Anonymous Client',
+      email: s.email || '',
+      company: s.company || '',
+      projectType: s.projectType || 'Custom Solution',
+      budget: s.budget || '$5k - $10k',
+      budgetTier: s.budget || '$5k - $10k',
+      timeline: s.timeline || 'Immediate',
+      message: s.message || '',
+      projectBrief: s.message || '',
+      status: (s.status as SubmissionStatus) || 'UNREAD',
+      priority: s.priority || 'MEDIUM',
+      notes: s.notes || '',
+      internalNotes: s.internalNotes || [],
+      date: s.createdAt ? new Date(s.createdAt).toLocaleDateString('en-US') : 'Recent',
+      createdAt: s.createdAt ? s.createdAt.toISOString() : new Date().toISOString(),
+      updatedAt: s.updatedAt ? s.updatedAt.toISOString() : new Date().toISOString(),
+    })) as unknown as ContactSubmission[];
   } catch (error) {
     console.error('[DB FETCH INQUIRIES ERROR]:', error);
     return [];

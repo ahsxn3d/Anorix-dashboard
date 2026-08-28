@@ -651,26 +651,33 @@ export const InquiriesSection: React.FC = () => {
                       </p>
                     </div>
                   ) : (
-                    columnSubs.map((sub) => (
-                      <InquiryKanbanCard
-                        key={sub.id}
-                        id={sub.id}
-                        clientName={sub.clientName}
-                        email={sub.company || sub.email}
-                        budgetTier={sub.budgetTier.split('(')[0].trim()}
-                        projectBrief={sub.projectBrief}
-                        status={sub.status}
-                        date={sub.date.split(',')[0]}
-                        onDragStart={(e) => {
-                          sound.playHoverTick();
-                          handleDragStart(e as unknown as React.DragEvent<HTMLDivElement>, sub.id);
-                        }}
-                        onClick={() => {
-                          sound.playHoverTick();
-                          setSelectedSubmission(sub);
-                        }}
-                      />
-                    ))
+                    columnSubs.map((sub) => {
+                      const rawBudget = sub.budgetTier || sub.budget || '$5k - $10k';
+                      const safeBudget = rawBudget.includes('(') ? rawBudget.split('(')[0].trim() : rawBudget;
+                      const rawDate = sub.date || (sub.createdAt ? String(sub.createdAt).split('T')[0] : 'Recent');
+                      const safeDate = rawDate.includes(',') ? rawDate.split(',')[0] : rawDate;
+
+                      return (
+                        <InquiryKanbanCard
+                          key={sub.id}
+                          id={sub.id}
+                          clientName={sub.clientName || sub.name || 'Anonymous Client'}
+                          email={sub.company || sub.email || 'No email'}
+                          budgetTier={safeBudget}
+                          projectBrief={sub.projectBrief || sub.message || 'No project brief provided'}
+                          status={sub.status}
+                          date={safeDate}
+                          onDragStart={(e) => {
+                            sound.playHoverTick();
+                            handleDragStart(e as unknown as React.DragEvent<HTMLDivElement>, sub.id);
+                          }}
+                          onClick={() => {
+                            sound.playHoverTick();
+                            setSelectedSubmission(sub);
+                          }}
+                        />
+                      );
+                    })
                   )}
                 </div>
               </div>
