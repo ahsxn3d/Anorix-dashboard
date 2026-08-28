@@ -163,7 +163,7 @@ export const ImageUploadDropzone: React.FC<ImageUploadDropzoneProps> = ({
             fill
             className="object-cover transition-transform duration-500 group-hover:scale-105"
             sizes="(max-width: 768px) 100vw, 600px"
-            unoptimized={value.includes('utfs.io') || value.includes('ufs.sh')}
+            unoptimized={true}
           />
 
           {/* Dark Glass Overlay on Hover */}
