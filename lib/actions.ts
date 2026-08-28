@@ -52,6 +52,10 @@ async function assertAuthorizedSession() {
         };
       }
     }
+  } catch {
+    // Continue to dev check
+  }
+
   // 3. In Development Mode, permit authorized operations
   if (process.env.NODE_ENV !== 'production') {
     return {
