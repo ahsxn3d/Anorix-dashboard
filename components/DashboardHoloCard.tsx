@@ -33,21 +33,38 @@ export const DashboardHoloCard: React.FC<DashboardHoloCardProps> = ({
     }
   }, []);
 
+  const animFrameRef = useRef<number | null>(null);
+
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (!supportsFinePointer || !containerRef.current) return;
     const rect = containerRef.current.getBoundingClientRect();
     if (!rect.width || !rect.height) return;
 
-    const xPct = (e.clientX - rect.left) / rect.width - 0.5;
-    const yPct = (e.clientY - rect.top) / rect.height - 0.5;
+    const clientX = e.clientX;
+    const clientY = e.clientY;
 
-    const rotX = -yPct * maxTilt;
-    const rotY = xPct * maxTilt;
-    const gX = (xPct + 0.5) * 100;
-    const gY = (yPct + 0.5) * 100;
+    if (animFrameRef.current) {
+      cancelAnimationFrame(animFrameRef.current);
+    }
 
-    setTilt({ rotateX: rotX, rotateY: rotY, glareX: gX, glareY: gY });
+    animFrameRef.current = requestAnimationFrame(() => {
+      const xPct = (clientX - rect.left) / rect.width - 0.5;
+      const yPct = (clientY - rect.top) / rect.height - 0.5;
+
+      const rotX = -yPct * maxTilt;
+      const rotY = xPct * maxTilt;
+      const gX = (xPct + 0.5) * 100;
+      const gY = (yPct + 0.5) * 100;
+
+      setTilt({ rotateX: rotX, rotateY: rotY, glareX: gX, glareY: gY });
+    });
   }, [maxTilt, supportsFinePointer]);
+
+  useEffect(() => {
+    return () => {
+      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+    };
+  }, []);
 
   return (
     <div

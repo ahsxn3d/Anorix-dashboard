@@ -147,8 +147,8 @@ export const DeploymentsSection: React.FC = () => {
       setIsLoadingApi(true);
       try {
         const fetched = await fetchDeploymentsAction();
-        if (mounted && fetched && fetched.length > 0) {
-          setDeployments(fetched);
+        if (mounted) {
+          setDeployments(fetched || []);
         }
       } catch (err) {
         console.warn('API fetch fallback to localStorage:', err);
