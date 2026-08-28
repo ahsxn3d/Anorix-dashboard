@@ -4,12 +4,48 @@ import { AUTHORIZED_EMAIL } from '@/lib/constants';
 
 export const dynamic = 'force-dynamic';
 
+function getBaseUrl(request: NextRequest): string {
+  // 1. Dynamic header detection (Vercel / Cloudflare / Custom Domain)
+  const forwardedHost = request.headers.get('x-forwarded-host');
+  const host = forwardedHost || request.headers.get('host');
+  if (host && !host.includes('localhost:')) {
+    const proto = request.headers.get('x-forwarded-proto') || 'https';
+    return `${proto}://${host}`;
+  }
+
+  // 2. Vercel deployment environment variables
+  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+    return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
+  }
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+
+  // 3. Environment configuration
+  if (process.env.NEXT_PUBLIC_APP_URL && !process.env.NEXT_PUBLIC_APP_URL.includes('localhost:3000')) {
+    return process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, '');
+  }
+  if (process.env.NEXTAUTH_URL && !process.env.NEXTAUTH_URL.includes('localhost:3000')) {
+    return process.env.NEXTAUTH_URL.replace(/\/$/, '');
+  }
+
+  // 4. Request URL origin
+  try {
+    const origin = new URL(request.url).origin;
+    if (origin && !origin.includes('0.0.0.0')) return origin;
+  } catch {
+    // fallback below
+  }
+
+  return 'http://localhost:3000';
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get('code');
   const error = searchParams.get('error');
 
-  const baseUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const baseUrl = getBaseUrl(request);
   const redirectUri = `${baseUrl}/api/auth/callback/google`;
 
   if (error || !code) {

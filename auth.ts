@@ -19,6 +19,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
 
+  trustHost: true,
+
   // 1. Extended Persistent Session (Stay Logged In for 1 Year)
   session: {
     strategy: 'jwt',
@@ -32,6 +34,19 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
 
   callbacks: {
+    // Relative Safe Redirects (No hardcoded localhost)
+    async redirect({ url, baseUrl }) {
+      // Allows relative callback URLs
+      if (url.startsWith('/')) return `${baseUrl}${url}`;
+      // Allows callback URLs on the same origin
+      try {
+        if (new URL(url).origin === baseUrl) return url;
+      } catch {
+        // invalid URL
+      }
+      return baseUrl;
+    },
+
     // 3. Strict Whitelist & Database Upsert on Sign In
     async signIn({ user }) {
       if (!user.email || user.email.toLowerCase() !== AUTHORIZED_EMAIL.toLowerCase()) {
