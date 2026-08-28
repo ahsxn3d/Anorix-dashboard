@@ -376,14 +376,26 @@ export const InquiriesSection: React.FC = () => {
     setDraggedSubmissionId(null);
   };
 
-  // Filter logic
+  // Filter logic with defensive null/undefined guards
   const filteredSubmissions = submissions.filter((sub) => {
-    const matchBudget = budgetTierFilter === 'ALL' || sub.budgetTier === budgetTierFilter;
+    const safeQuery = (searchQuery || '').trim().toLowerCase();
+    const clientName = (sub.name || sub.clientName || '').toLowerCase();
+    const email = (sub.email || '').toLowerCase();
+    const company = (sub.company || '').toLowerCase();
+    const brief = (sub.message || sub.projectBrief || sub.projectType || '').toLowerCase();
+
+    const matchBudget =
+      budgetTierFilter === 'ALL' ||
+      (sub.budget || sub.budgetTier) === budgetTierFilter;
+
+    if (!safeQuery) return matchBudget;
+
     const matchSearch =
-      sub.clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      sub.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (sub.company && sub.company.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      sub.projectBrief.toLowerCase().includes(searchQuery.toLowerCase());
+      clientName.includes(safeQuery) ||
+      email.includes(safeQuery) ||
+      company.includes(safeQuery) ||
+      brief.includes(safeQuery);
+
     return matchBudget && matchSearch;
   });
 

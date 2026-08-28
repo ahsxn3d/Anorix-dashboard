@@ -22,3 +22,4 @@ export { TextHackerScramble } from './TextHackerScramble';
 export { PlayfulLogo } from './PlayfulLogo';
 export { CyberScrambleText } from './CyberScrambleText';
 export { CyberDropdown } from './CyberDropdown';
+export { ErrorBoundary } from './ErrorBoundary';

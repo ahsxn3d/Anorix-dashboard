@@ -15,6 +15,7 @@ import { TextHackerScramble } from '@/components/TextHackerScramble';
 import { DashboardHoloCard } from '@/components/DashboardHoloCard';
 import { StatusRadarPulse } from '@/components/StatusRadarPulse';
 import { CyberButton } from '@/components/CyberButton';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { AUTHORIZED_EMAIL } from '@/lib/constants';
 import { sound } from '@/lib/sound';
 import { Cpu, Lock, ShieldCheck, Sparkles, ArrowRight } from 'lucide-react';
@@ -305,7 +306,7 @@ export default function AdminDashboard({ sessionUser }: AdminDashboardProps) {
               </div>
             </div>
           ) : (
-            <>
+            <ErrorBoundary fallbackTitle="Dashboard Workspace View Error">
               {activeTab === 'inquiries' && <InquiriesSection />}
               {activeTab === 'deployments' && <DeploymentsSection />}
               {activeTab === 'cms' && <CmsSection onTriggerReload={handleTriggerCmsReload} />}
@@ -316,7 +317,7 @@ export default function AdminDashboard({ sessionUser }: AdminDashboardProps) {
                   onOpenSignIn={() => setIsSignInModalOpen(true)}
                 />
               )}
-            </>
+            </ErrorBoundary>
           )}
         </div>
       </main>

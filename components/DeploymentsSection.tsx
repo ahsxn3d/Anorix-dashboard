@@ -470,17 +470,34 @@ export const DeploymentsSection: React.FC = () => {
     reader.readAsDataURL(file);
   };
 
-  // Filtered list
-  const filteredDeployments = deployments.filter((d) => {
+  // Filtered list with defensive null/undefined guards
+  const filteredDeployments = (deployments || []).filter((d) => {
+    if (!d) return false;
+    const safeQuery = (searchQuery || '').trim().toLowerCase();
     const matchCategory = categoryFilter === 'ALL' || d.category === categoryFilter;
     const matchStatus = statusFilter === 'ALL' || d.status === statusFilter;
+
+    if (!safeQuery) return matchCategory && matchStatus;
+
+    const title = (d.title || '').toLowerCase();
+    const slug = (d.slug || '').toLowerCase();
+    const badge = (d.badge || '').toLowerCase();
+    const client = (d.client || '').toLowerCase();
+    const category = (d.category || '').toLowerCase();
+    const shortDesc = (d.shortDescription || '').toLowerCase();
+    const tagsMatch = Array.isArray(d.tags) && d.tags.some((t) => (t || '').toLowerCase().includes(safeQuery));
+    const techMatch = Array.isArray(d.techStack) && d.techStack.some((t) => (t || '').toLowerCase().includes(safeQuery));
+
     const matchSearch =
-      d.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (d.slug && d.slug.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (d.badge && d.badge.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (d.client && d.client.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (d.tags && d.tags.some((t) => t.toLowerCase().includes(searchQuery.toLowerCase()))) ||
-      (d.techStack && d.techStack.some((t) => t.toLowerCase().includes(searchQuery.toLowerCase())));
+      title.includes(safeQuery) ||
+      slug.includes(safeQuery) ||
+      badge.includes(safeQuery) ||
+      client.includes(safeQuery) ||
+      category.includes(safeQuery) ||
+      shortDesc.includes(safeQuery) ||
+      tagsMatch ||
+      techMatch;
+
     return matchCategory && matchStatus && matchSearch;
   });
 

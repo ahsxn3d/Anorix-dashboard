@@ -41,8 +41,8 @@ export const BounceRotateText: React.FC<BounceRotateTextProps> = ({
     return (
       <Component className={`inline-flex flex-wrap gap-x-1.5 gap-y-0.5 items-center ${className}`}>
         {words.map((word, i) => {
-          const isHighlighted = highlightWords.some(
-            (hw) => hw.toLowerCase() === word.toLowerCase().replace(/[^a-z0-9]/gi, '')
+          const isHighlighted = (highlightWords || []).some(
+            (hw) => (hw || '').toLowerCase() === (word || '').toLowerCase().replace(/[^a-z0-9]/gi, '')
           );
           const rotationAngle = (i % 2 === 0 ? 1 : -1) * maxRotate;
 
