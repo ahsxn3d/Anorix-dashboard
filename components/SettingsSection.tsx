@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   User,
   Shield,
@@ -26,12 +26,16 @@ import {
   Server,
   Zap,
   Globe,
-  Radio
+  Radio,
+  UploadCloud,
+  X,
+  RefreshCw,
+  Trash2,
+  ImageIcon
 } from 'lucide-react';
 import { TextHackerScramble } from './TextHackerScramble';
 import { KineticTitle } from './KineticTitle';
 import { CyberButton } from './CyberButton';
-import { ImageUploadDropzone } from './ImageUploadDropzone';
 import { updateAdminProfile } from '@/lib/actions';
 
 interface SettingsSectionProps {
@@ -39,13 +43,15 @@ interface SettingsSectionProps {
   isLoggedIn?: boolean;
   onSignOut?: () => void;
   onOpenSignIn?: () => void;
+  onProfileUpdate?: (updated: { name?: string; avatarUrl?: string }) => void;
 }
 
 export const SettingsSection: React.FC<SettingsSectionProps> = ({
   onAccentChange,
   isLoggedIn = true,
   onSignOut,
-  onOpenSignIn
+  onOpenSignIn,
+  onProfileUpdate
 }) => {
   const [activeTab, setActiveTab] = useState<'PROFILE' | 'SECURITY' | 'API_KEYS' | 'PREFERENCES'>('PROFILE');
 
@@ -58,7 +64,7 @@ export const SettingsSection: React.FC<SettingsSectionProps> = ({
     setTimeout(() => setToastMessage(null), 3500);
   };
 
-  // ================= 1. GENERAL PROFILE STATE =================
+  // ================= 1. GENERAL PROFILE & AVATAR STATE =================
   const [avatarUrl, setAvatarUrl] = useState<string>(() => {
     if (typeof window === 'undefined') return 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80';
     return localStorage.getItem('anorent_admin_user_avatar') || localStorage.getItem('lumaora_admin_user_avatar') || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80';
@@ -74,6 +80,115 @@ export const SettingsSection: React.FC<SettingsSectionProps> = ({
     'Lead platform architect overseeing high-frequency WebGL digital workflows, automated checkout engine pipelines, and real-time inventory management.'
   );
 
+  // Avatar Drag-and-Drop & File State
+  const [isAvatarDragging, setIsAvatarDragging] = useState(false);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
+  const avatarFileInputRef = useRef<HTMLInputElement>(null);
+
+  const processAvatarFile = (file: File) => {
+    // 1. Validate File Type
+    const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+    if (!validTypes.includes(file.type.toLowerCase())) {
+      const err = 'Invalid file format. Please upload a PNG, JPG, JPEG, or WebP image.';
+      setAvatarError(err);
+      showSaveToast(err);
+      return;
+    }
+
+    // 2. Validate File Size (< 2MB)
+    const MAX_SIZE = 2 * 1024 * 1024;
+    if (file.size > MAX_SIZE) {
+      const sizeMb = (file.size / (1024 * 1024)).toFixed(2);
+      const err = `File size exceeds 2MB limit (${sizeMb}MB). Please choose a smaller image.`;
+      setAvatarError(err);
+      showSaveToast(err);
+      return;
+    }
+
+    setAvatarError(null);
+
+    // 3. Convert to Data URL Base64 for instant preview and database persistence
+    const reader = new FileReader();
+    reader.onload = (uploadEvent) => {
+      if (uploadEvent.target?.result) {
+        const dataUrl = uploadEvent.target.result as string;
+        setAvatarUrl(dataUrl);
+
+        // Immediate live sync to active session and components
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('anorent_admin_user_avatar', dataUrl);
+          localStorage.setItem('lumaora_admin_user_avatar', dataUrl);
+          window.dispatchEvent(
+            new CustomEvent('anorix:profile_updated', {
+              detail: { name: fullName, avatar: dataUrl, avatarUrl: dataUrl },
+            })
+          );
+        }
+        if (onProfileUpdate) {
+          onProfileUpdate({ name: fullName, avatarUrl: dataUrl });
+        }
+
+        showSaveToast('Profile avatar loaded! Save changes to persist.');
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleAvatarDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsAvatarDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      processAvatarFile(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleAvatarInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      processAvatarFile(e.target.files[0]);
+    }
+  };
+
+  const handleResetAvatar = () => {
+    const defaultAvatar = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80';
+    setAvatarUrl(defaultAvatar);
+    setAvatarError(null);
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('anorent_admin_user_avatar', defaultAvatar);
+      localStorage.setItem('lumaora_admin_user_avatar', defaultAvatar);
+      window.dispatchEvent(
+        new CustomEvent('anorix:profile_updated', {
+          detail: { name: fullName, avatar: defaultAvatar, avatarUrl: defaultAvatar },
+        })
+      );
+    }
+    if (onProfileUpdate) {
+      onProfileUpdate({ name: fullName, avatarUrl: defaultAvatar });
+    }
+
+    showSaveToast('Avatar photo reset to default.');
+  };
+
+  const handleRemoveAvatar = () => {
+    setAvatarUrl('');
+    setAvatarError(null);
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('anorent_admin_user_avatar', '');
+      localStorage.setItem('lumaora_admin_user_avatar', '');
+      window.dispatchEvent(
+        new CustomEvent('anorix:profile_updated', {
+          detail: { name: fullName, avatar: '', avatarUrl: '' },
+        })
+      );
+    }
+    if (onProfileUpdate) {
+      onProfileUpdate({ name: fullName, avatarUrl: '' });
+    }
+
+    showSaveToast('Avatar photo removed.');
+  };
+
   const handleSaveProfile = async () => {
     setIsSavingProfile(true);
     try {
@@ -82,6 +197,15 @@ export const SettingsSection: React.FC<SettingsSectionProps> = ({
         localStorage.setItem('lumaora_admin_user_name', fullName);
         localStorage.setItem('anorent_admin_user_avatar', avatarUrl);
         localStorage.setItem('lumaora_admin_user_avatar', avatarUrl);
+        window.dispatchEvent(
+          new CustomEvent('anorix:profile_updated', {
+            detail: { name: fullName, avatar: avatarUrl, avatarUrl },
+          })
+        );
+      }
+
+      if (onProfileUpdate) {
+        onProfileUpdate({ name: fullName, avatarUrl });
       }
 
       await updateAdminProfile({
@@ -89,32 +213,13 @@ export const SettingsSection: React.FC<SettingsSectionProps> = ({
         avatarUrl,
       });
 
-      showSaveToast('Profile details synchronized to database & studio CMS!');
+      showSaveToast('Profile details synchronized to database & studio Cockpit!');
     } catch (err: unknown) {
       console.warn('[Profile Save Notice]:', err);
       showSaveToast('Profile saved locally (Database sync active)');
     } finally {
       setIsSavingProfile(false);
     }
-  };
-
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      const reader = new FileReader();
-      reader.onload = (uploadEvent) => {
-        if (uploadEvent.target?.result) {
-          setAvatarUrl(uploadEvent.target.result as string);
-          showSaveToast('Profile avatar photo updated!');
-        }
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleResetAvatar = () => {
-    setAvatarUrl('https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80');
-    showSaveToast('Avatar photo reset to default avatar.');
   };
 
   // ================= 2. SECURITY & 2FA STATE =================
@@ -330,46 +435,161 @@ export const SettingsSection: React.FC<SettingsSectionProps> = ({
               )}
             </div>
 
-            {/* UploadThing Avatar Uploader Block */}
-            <div className="p-4 rounded-xl bg-[#0a0514] border border-white/10 space-y-3">
-              <div className="flex flex-col sm:flex-row items-center gap-6">
-                <ImageUploadDropzone
-                  endpoint="avatarImage"
-                  value={avatarUrl}
-                  onChange={(url) => setAvatarUrl(url)}
-                  aspectRatio="avatar"
-                  className="shrink-0"
-                />
+            {/* Modern Drag-and-Drop + Click-to-Browse Profile Photo Avatar Zone */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-mono font-bold text-white flex items-center gap-1.5 uppercase tracking-wider">
+                  <Sparkles className="w-3.5 h-3.5 text-[#38bdf8]" />
+                  Profile Photo Avatar
+                </label>
+                <span className="text-[10px] font-mono text-purple-300/80 bg-purple-500/10 px-2 py-0.5 rounded-full border border-purple-500/20">
+                  PNG, JPG, WEBP • Max 2MB
+                </span>
+              </div>
 
-                <div className="space-y-1.5 text-center sm:text-left flex-1">
-                  <h4 className="text-xs font-bold text-white font-mono uppercase tracking-wider">
-                    Profile Photo Avatar
-                  </h4>
-                  <p className="text-[11px] text-[#a393eb]">
-                    Upload PNG, JPG, or WebP up to 2MB directly to UploadThing CDN. Synchronizes with your Neon PostgreSQL Superadmin profile.
+              {/* Hidden File Input */}
+              <input
+                ref={avatarFileInputRef}
+                type="file"
+                accept="image/png,image/jpeg,image/jpg,image/webp"
+                className="hidden"
+                onChange={handleAvatarInputChange}
+              />
+
+              {/* Error Banner */}
+              {avatarError && (
+                <div className="p-3 rounded-xl bg-rose-500/15 border border-rose-500/40 text-rose-300 text-xs font-mono flex items-center gap-2 animate-in fade-in">
+                  <AlertTriangle className="w-4 h-4 shrink-0 text-rose-400" />
+                  <span className="flex-1">{avatarError}</span>
+                  <button
+                    type="button"
+                    onClick={() => setAvatarError(null)}
+                    className="p-1 hover:text-white transition-colors cursor-pointer"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
+
+              {/* Avatar Zone: Live Preview State or Empty Dropzone */}
+              {avatarUrl ? (
+                <div
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setIsAvatarDragging(true);
+                  }}
+                  onDragLeave={() => setIsAvatarDragging(false)}
+                  onDrop={handleAvatarDrop}
+                  className={`relative p-5 rounded-2xl bg-[#0d051f]/90 border transition-all duration-300 flex flex-col sm:flex-row items-center gap-6 shadow-xl backdrop-blur-xl group ${
+                    isAvatarDragging
+                      ? 'border-cyan-400 bg-[#160833] shadow-[0_0_30px_rgba(56,189,248,0.3)] scale-[0.99]'
+                      : 'border-purple-500/30 hover:border-purple-500/60 shadow-[0_4px_25px_rgba(0,0,0,0.5)]'
+                  }`}
+                >
+                  {/* Avatar Circular Preview with Neon Halo */}
+                  <div className="relative shrink-0">
+                    <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden border-2 border-[#a855f7] shadow-[0_0_25px_rgba(168,85,247,0.45)] bg-black/80 flex items-center justify-center relative group/img">
+                      <img
+                        src={avatarUrl}
+                        alt={fullName || 'Superadmin Avatar'}
+                        className="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-300"
+                      />
+                      <div
+                        onClick={() => avatarFileInputRef.current?.click()}
+                        className="absolute inset-0 bg-black/60 opacity-0 group-hover/img:opacity-100 transition-opacity flex flex-col items-center justify-center text-white cursor-pointer"
+                      >
+                        <Camera className="w-5 h-5 text-cyan-300" />
+                        <span className="text-[9px] font-mono font-bold mt-1 text-cyan-200">CHANGE</span>
+                      </div>
+                    </div>
+                    <span className="absolute bottom-1 right-1 w-4 h-4 bg-emerald-400 rounded-full border-2 border-[#0d051f] shadow-[0_0_10px_#34d399]" />
+                  </div>
+
+                  {/* Avatar Info & Action Buttons */}
+                  <div className="space-y-3 flex-1 text-center sm:text-left">
+                    <div>
+                      <div className="flex items-center justify-center sm:justify-start gap-2">
+                        <h4 className="text-sm font-bold text-white font-mono tracking-wide">
+                          {fullName || 'Master Administrator'}
+                        </h4>
+                        <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                          LIVE PREVIEW ACTIVE
+                        </span>
+                      </div>
+                      <p className="text-xs text-[#a393eb] mt-0.5">
+                        Drag & drop a new photo directly onto this card or click below to replace.
+                      </p>
+                    </div>
+
+                    <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2.5 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => avatarFileInputRef.current?.click()}
+                        className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#a855f7] to-[#7c3aed] hover:from-[#9333ea] hover:to-[#6d28d9] text-white text-xs font-mono font-bold flex items-center gap-1.5 shadow-md shadow-[#a855f7]/30 hover:scale-105 transition-all cursor-pointer"
+                      >
+                        <UploadCloud className="w-3.5 h-3.5" />
+                        Change Avatar
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleResetAvatar}
+                        className="px-3 py-1.5 rounded-xl bg-[#130728] hover:bg-[#1f0b40] text-slate-300 hover:text-white text-xs font-mono font-semibold border border-white/10 hover:border-purple-500/40 cursor-pointer flex items-center gap-1.5 transition-all"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5 text-[#a393eb]" />
+                        Reset Default
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleRemoveAvatar}
+                        className="px-3 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 hover:text-rose-200 text-xs font-mono font-semibold border border-rose-500/30 hover:border-rose-500/50 cursor-pointer flex items-center gap-1.5 transition-all"
+                      >
+                        <Trash2 className="w-3.5 h-3.5 text-rose-400" />
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                /* Empty Dropzone State */
+                <div
+                  onClick={() => avatarFileInputRef.current?.click()}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setIsAvatarDragging(true);
+                  }}
+                  onDragLeave={() => setIsAvatarDragging(false)}
+                  onDrop={handleAvatarDrop}
+                  className={`p-8 rounded-2xl border-2 border-dashed transition-all duration-300 flex flex-col items-center justify-center text-center cursor-pointer bg-[#0a0318]/90 backdrop-blur-xl group ${
+                    isAvatarDragging
+                      ? 'border-cyan-400 bg-[#160833] shadow-[0_0_30px_rgba(56,189,248,0.35)] scale-[0.99]'
+                      : 'border-purple-500/30 hover:border-[#a855f7] hover:bg-[#120626] shadow-xl'
+                  }`}
+                >
+                  <div className="w-14 h-14 rounded-2xl bg-[#14072b] border border-purple-500/30 flex items-center justify-center text-[#a855f7] group-hover:text-[#38bdf8] group-hover:border-[#38bdf8]/60 group-hover:scale-110 transition-all shadow-lg mb-3">
+                    <UploadCloud className="w-7 h-7" />
+                  </div>
+                  <p className="text-xs font-mono font-bold text-white group-hover:text-cyan-300 transition-colors">
+                    Drag & drop avatar photo here or <span className="text-[#a855f7] underline group-hover:text-cyan-300">browse files</span>
                   </p>
-                  <div className="flex items-center justify-center sm:justify-start gap-2 pt-2">
+                  <p className="text-[11px] font-mono text-slate-400 mt-1">
+                    Accepts PNG, JPG, JPEG, or WebP up to 2MB
+                  </p>
+                  <div className="mt-3 flex items-center gap-2">
                     <button
                       type="button"
-                      onClick={handleResetAvatar}
-                      className="px-3 py-1.5 rounded-lg bg-[#130728] text-slate-300 hover:text-white text-xs font-bold border border-white/10 hover:border-white/20 cursor-pointer flex items-center gap-1.5 transition-all"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleResetAvatar();
+                      }}
+                      className="px-3 py-1 text-[11px] font-mono text-purple-300 hover:text-white bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 rounded-lg transition-all"
                     >
-                      <RotateCcw className="w-3.5 h-3.5 text-[#a393eb]" /> Reset to Default
+                      Use Default Avatar
                     </button>
                   </div>
                 </div>
-              </div>
-
-              <div className="space-y-1 pt-1">
-                <span className="text-[10px] font-mono text-slate-400">Direct Avatar CDN URL:</span>
-                <input
-                  type="url"
-                  value={avatarUrl}
-                  onChange={(e) => setAvatarUrl(e.target.value)}
-                  placeholder="https://utfs.io/f/... or https://..."
-                  className="w-full px-3 py-2 rounded-xl bg-[#130728] border border-white/10 text-white font-mono text-xs focus:outline-none focus:border-[#a855f7]"
-                />
-              </div>
+              )}
             </div>
 
             {/* Form Inputs */}

@@ -784,11 +784,17 @@ export async function saveMasterWebsiteCustomizerAction(
 export async function updateAdminProfile(formData: { name: string; avatarUrl?: string }) {
   await assertAuthorizedSession();
 
-  const updatedUser = await prisma.user.update({
+  const updatedUser = await prisma.user.upsert({
     where: { email: AUTHORIZED_EMAIL },
-    data: {
+    update: {
       name: formData.name,
       ...(formData.avatarUrl ? { avatarUrl: formData.avatarUrl } : {}),
+    },
+    create: {
+      email: AUTHORIZED_EMAIL,
+      name: formData.name,
+      avatarUrl: formData.avatarUrl || null,
+      role: 'SUPERADMIN',
     },
   });
 

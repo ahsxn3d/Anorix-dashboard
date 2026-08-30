@@ -106,6 +106,35 @@ export default function AdminDashboard({ sessionUser }: AdminDashboardProps) {
     }
   }, [sessionUser]);
 
+  // Real-time listener for profile & avatar updates across all dashboard components
+  useEffect(() => {
+    const handleCustomProfileUpdate = (e: Event) => {
+      const customEvt = e as CustomEvent<{ name?: string; avatar?: string; avatarUrl?: string }>;
+      if (customEvt.detail) {
+        const newName = customEvt.detail.name;
+        const newAvatar = customEvt.detail.avatar || customEvt.detail.avatarUrl;
+        setCurrentUser((prev) => ({
+          ...prev,
+          name: newName || prev.name,
+          avatar: newAvatar || prev.avatar,
+        }));
+      }
+    };
+
+    window.addEventListener('anorix:profile_updated', handleCustomProfileUpdate);
+    return () => {
+      window.removeEventListener('anorix:profile_updated', handleCustomProfileUpdate);
+    };
+  }, []);
+
+  const handleProfileUpdate = (updated: { name?: string; avatarUrl?: string }) => {
+    setCurrentUser((prev) => ({
+      ...prev,
+      name: updated.name || prev.name,
+      avatar: updated.avatarUrl || prev.avatar,
+    }));
+  };
+
   const handleLoginSuccess = (user: { name: string; email: string; avatar: string }) => {
     setCurrentUser(user);
     setIsLoggedIn(true);
@@ -315,6 +344,7 @@ export default function AdminDashboard({ sessionUser }: AdminDashboardProps) {
                   isLoggedIn={isLoggedIn}
                   onSignOut={handleSignOut}
                   onOpenSignIn={() => setIsSignInModalOpen(true)}
+                  onProfileUpdate={handleProfileUpdate}
                 />
               )}
             </ErrorBoundary>
