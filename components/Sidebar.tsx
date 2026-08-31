@@ -152,15 +152,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 }`}
               >
                 {/* Icon & Label Left Group */}
-                <div className="flex items-center gap-2.5 relative z-10">
+                <div className="flex items-center gap-3 relative z-10">
                   <div
-                    className={`p-1.5 rounded-full flex items-center justify-center transition-all duration-200 shrink-0 ${
+                    className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 shrink-0 ${
                       isActive
-                        ? 'bg-white/20 text-white shadow-[0_0_10px_rgba(255,255,255,0.6)]'
-                        : 'bg-white/5 text-purple-300 group-hover:text-white group-hover:bg-[#8B00EE]/30'
+                        ? 'bg-white/20 text-white shadow-[0_0_12px_rgba(255,255,255,0.5)] border border-white/30'
+                        : 'bg-white/5 text-purple-300 group-hover:text-white group-hover:bg-[#8B00EE]/30 border border-white/5 group-hover:border-purple-400/40'
                     }`}
                   >
-                    <Icon className="w-3.5 h-3.5" />
+                    <Icon className="w-4 h-4" />
                   </div>
                   <span className="tracking-wide text-xs font-semibold text-left truncate">
                     {item.label}

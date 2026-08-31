@@ -355,20 +355,28 @@ export const CmsSection: React.FC<CmsSectionProps> = ({ onTriggerReload }) => {
       </DashboardHoloCard>
 
       {/* 2 FOCUSED MANAGEMENT TABS NAVIGATION BAR */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 p-1.5 rounded-2xl bg-[#130722]/90 border border-purple-500/20 backdrop-blur-md shadow-xl">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 p-2 rounded-2xl bg-[#130722]/90 border border-purple-500/20 backdrop-blur-md shadow-xl">
         {/* Tab 1 */}
         <button
           onClick={() => {
             sound.playClick();
             setActiveTab('about');
           }}
-          className={`py-3 px-3.5 rounded-xl text-xs font-mono font-bold transition-all flex items-center justify-center gap-2 text-center cursor-pointer ${
+          className={`py-3 px-4 rounded-xl text-xs font-mono font-bold transition-all flex items-center justify-center gap-3 text-center cursor-pointer ${
             activeTab === 'about'
               ? 'bg-[#8B00EE] text-white shadow-lg shadow-purple-600/30 scale-[1.01]'
               : 'text-slate-400 hover:text-white hover:bg-white/5'
           }`}
         >
-          <Activity className="w-4 h-4 shrink-0" />
+          <div
+            className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-all ${
+              activeTab === 'about'
+                ? 'bg-white/20 text-white border border-white/30 shadow-[0_0_8px_rgba(255,255,255,0.4)]'
+                : 'bg-white/5 text-purple-300 border border-white/10'
+            }`}
+          >
+            <Activity className="w-3.5 h-3.5 shrink-0" />
+          </div>
           <span className="truncate">1. ABOUT & STATS HIGHLIGHTS</span>
         </button>
 
@@ -378,13 +386,21 @@ export const CmsSection: React.FC<CmsSectionProps> = ({ onTriggerReload }) => {
             sound.playClick();
             setActiveTab('contact');
           }}
-          className={`py-3 px-3.5 rounded-xl text-xs font-mono font-bold transition-all flex items-center justify-center gap-2 text-center cursor-pointer ${
+          className={`py-3 px-4 rounded-xl text-xs font-mono font-bold transition-all flex items-center justify-center gap-3 text-center cursor-pointer ${
             activeTab === 'contact'
               ? 'bg-[#8B00EE] text-white shadow-lg shadow-purple-600/30 scale-[1.01]'
               : 'text-slate-400 hover:text-white hover:bg-white/5'
           }`}
         >
-          <Mail className="w-4 h-4 shrink-0" />
+          <div
+            className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-all ${
+              activeTab === 'contact'
+                ? 'bg-white/20 text-white border border-white/30 shadow-[0_0_8px_rgba(255,255,255,0.4)]'
+                : 'bg-white/5 text-purple-300 border border-white/10'
+            }`}
+          >
+            <Mail className="w-3.5 h-3.5 shrink-0" />
+          </div>
           <span className="truncate">2. CONTACT & SOCIAL CHANNELS</span>
         </button>
       </div>

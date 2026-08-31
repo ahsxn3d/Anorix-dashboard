@@ -123,14 +123,14 @@ export const Header: React.FC<HeaderProps> = ({
             initial={{ scale: 0.88, y: -6, opacity: 0 }}
             animate={{ scale: 1, y: 0, opacity: 1 }}
             transition={{ type: 'spring', stiffness: 420, damping: 18 }}
-            className="hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-[#1a0a38] via-[#240c4e] to-[#1a0a38] border border-purple-400/40 shadow-[inset_0_1px_2px_rgba(255,255,255,0.25),inset_0_-2px_4px_rgba(0,0,0,0.6),0_4px_16px_rgba(139,0,238,0.35)] shrink-0"
+            className="hidden sm:flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-[#1a0a38] via-[#240c4e] to-[#1a0a38] border border-purple-400/40 shadow-[inset_0_1px_2px_rgba(255,255,255,0.25),inset_0_-2px_4px_rgba(0,0,0,0.6),0_4px_16px_rgba(139,0,238,0.35)] shrink-0"
           >
             <motion.div
               animate={{ rotate: [0, -10, 10, 0] }}
               transition={{ duration: 0.5 }}
-              className="p-1 rounded-full bg-[#8B00EE] text-white shadow-[0_0_8px_rgba(139,0,238,0.8)]"
+              className="w-7 h-7 rounded-full bg-[#8B00EE] text-white shadow-[0_0_10px_rgba(139,0,238,0.8)] flex items-center justify-center shrink-0 border border-purple-300/40"
             >
-              <ActiveIcon className="w-3 h-3" />
+              <ActiveIcon className="w-3.5 h-3.5" />
             </motion.div>
             <div className="flex flex-col text-left">
               <span className="text-[11px] font-black font-mono tracking-wider text-white">

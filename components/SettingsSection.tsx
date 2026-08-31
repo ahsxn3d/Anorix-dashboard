@@ -339,13 +339,21 @@ export const SettingsSection: React.FC<SettingsSectionProps> = ({
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`px-4 py-2.5 rounded-t-xl text-xs font-extrabold flex items-center gap-2 whitespace-nowrap transition-all cursor-pointer border-t border-x ${
+              className={`px-4 py-2.5 rounded-t-2xl text-xs font-extrabold flex items-center gap-2.5 whitespace-nowrap transition-all cursor-pointer border-t border-x ${
                 isActive
                   ? 'bg-[#130728] text-white border-[#a855f7] border-b-transparent shadow-[0_-4px_15px_rgba(168,85,247,0.25)]'
                   : 'bg-[#0a0514]/60 text-[#a393eb] hover:text-white border-transparent hover:bg-[#130728]/50'
               }`}
             >
-              <Icon className={`w-4 h-4 ${isActive ? 'text-[#a855f7]' : 'text-[#a393eb]'}`} />
+              <div
+                className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-all ${
+                  isActive
+                    ? 'bg-[#a855f7]/25 text-white border border-[#a855f7]/60 shadow-[0_0_10px_rgba(168,85,247,0.4)]'
+                    : 'bg-white/5 text-[#a393eb] border border-white/5 group-hover:border-white/10'
+                }`}
+              >
+                <Icon className="w-3.5 h-3.5" />
+              </div>
               <span>{tab.label}</span>
             </button>
           );
