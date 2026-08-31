@@ -3,6 +3,7 @@ import { auth } from '@/auth';
 import AdminDashboard from './admin/AdminDashboard';
 
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export const metadata: Metadata = {
   title: 'ANORENT — Studio Cockpit & Admin Dashboard',

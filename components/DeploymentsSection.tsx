@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useRef, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   FolderKanban,
   Search,
@@ -134,6 +135,8 @@ export const DeploymentsSection: React.FC = () => {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
+
+  const router = useRouter();
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -353,6 +356,7 @@ export const DeploymentsSection: React.FC = () => {
       });
       setIsModalOpen(false);
       sound.playSuccess();
+      router.refresh();
       showToast(`Saved "${itemData.title}" & synchronized with /api/deployments`);
     } else {
       showToast(`Error: ${res.message}`);
@@ -371,6 +375,7 @@ export const DeploymentsSection: React.FC = () => {
         return filtered;
       });
       sound.playTrash();
+      router.refresh();
       showToast(`Deleted "${depTitle}"`);
     }
   };
@@ -390,6 +395,7 @@ export const DeploymentsSection: React.FC = () => {
       return nextList;
     });
     sound.playHoverTick();
+    router.refresh();
     showToast(`"${dep.title}" featured status: ${updatedItem.isFeatured ? 'ACTIVE (Featured)' : 'STANDARD'}`);
   };
 

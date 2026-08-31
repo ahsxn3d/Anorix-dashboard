@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { auth, AUTHORIZED_EMAIL } from '@/auth';
 
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -42,10 +43,12 @@ export async function GET(request: NextRequest) {
       ];
     }
 
-    const deployments = await prisma.deploymentProduct.findMany({
+    const rawDeployments = await prisma.deploymentProduct.findMany({
       where,
       orderBy: { displayOrder: 'asc' },
     });
+
+    const deployments = Array.isArray(rawDeployments) ? rawDeployments : [];
 
     return NextResponse.json(
       {
@@ -57,13 +60,14 @@ export async function GET(request: NextRequest) {
       { headers: CORS_HEADERS }
     );
   } catch (error: unknown) {
-    console.error('[API DEPLOYMENTS GET ERROR]:', error);
+    console.error('[API DEPLOYMENTS GET ERROR]: Failed to query PostgreSQL DeploymentProduct table:', error);
     return NextResponse.json(
       {
         success: true,
         total: 0,
         data: [],
         message: 'No deployments found or database initializing.',
+        error: error instanceof Error ? error.message : 'Database error',
         timestamp: new Date().toISOString(),
       },
       { status: 200, headers: CORS_HEADERS }

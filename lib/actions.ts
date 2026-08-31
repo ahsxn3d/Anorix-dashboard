@@ -189,6 +189,7 @@ export async function upsertDeploymentAction(
     revalidatePath('/', 'layout');
     revalidatePath('/deployments');
     revalidatePath('/admin');
+    revalidatePath('/api/deployments');
 
     return {
       success: true,
@@ -220,6 +221,7 @@ export async function deleteDeploymentAction(id: string): Promise<ServerActionRe
     revalidatePath('/', 'layout');
     revalidatePath('/deployments');
     revalidatePath('/admin');
+    revalidatePath('/api/deployments');
 
     return {
       success: true,

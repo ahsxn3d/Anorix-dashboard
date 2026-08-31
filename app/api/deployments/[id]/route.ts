@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { auth, AUTHORIZED_EMAIL } from '@/auth';
 
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
